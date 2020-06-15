@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
@@ -20,33 +21,15 @@ import (
 var (
 	host    = flag.String("host", "127.0.0.1", "Host address to listen on.")
 	port    = flag.Int("port", 9010, "Port upon which to listen for requests.")
-	docroot = flag.String("docroot", "/prod/cougar-angels.com", "DocumentRoot.")
+	docroot = flag.String("docroot", "./pics", "DocumentRoot.")
+	bgroot  = flag.String("bgroot", "./backgrounds", "BackGround root")
 
 	// Single template makes the milkshake.
 	page = template.Must(template.New("page").Parse(pageTemplate))
 
-	image = []string{
-		"/bk/cougar.jpg",
-		"/bk/cougar-03.png",
-		"/bk/cougarangel.jpg",
-		"/bk/cougar-rock.jpg",
-		"/bk/crayon.jpg",
-		"/bk/garfield.png",
-		"/bk/narla.jpg",
-		"/bk/snowy.jpg",
-		"/bk/kitty.jpg",
-		"/bk/stone.jpg",
-	}
+	image = []string{}
 
-	background = []string{
-		"/bk/christmas_lights_texture_seamless.jpg",
-		"/bk/colorful_christmas_lights_seamless_texture.jpg",
-		"/bk/green_christmas_lights_out_of_focus_seamless_texture.jpg",
-		"/bk/pink_and_purple_christmas_lights_texture_seamless.jpg",
-		"/bk/pink_christmas_lights_texture_seamless.jpg",
-		"/bk/purple_satin_love_bats.gif",
-		"/bk/red_yellow_and_green_stars.gif",
-	}
+	background = []string{}
 
 	// Set a random seed object up.
 	r = rand.New(rand.NewSource(time.Now().Unix()))
@@ -61,15 +44,15 @@ func newHandler() (*handler, error) {
 func selectRandom(s string) string {
 	switch {
 	case s == "/bk/img.jpg":
-		return image[r.Intn(len(image))]
+		return filepath.Join(*docroot, image[r.Intn(len(image))])
 	case s == "/bk/background.jpg":
-		return background[r.Intn(len(background))]
+		return filepath.Join(*bgroot, background[r.Intn(len(background))])
 	default:
 		return "#fail"
 	}
 }
 func writeFile(w http.ResponseWriter, r *http.Request) {
-	fp := filepath.Join(*docroot, selectRandom(r.URL.Path))
+	fp := filepath.Join(selectRandom(r.URL.Path))
 	if _, err := os.Stat(fp); err != nil {
 		fmt.Fprintf(w, "<!-- invalid image: %v -->\n", r.URL.Path)
 	}
@@ -110,6 +93,23 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	flag.Parse()
+
+	files, err := ioutil.ReadDir(*docroot)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, f := range files {
+		image = append(image, f.Name())
+	}
+
+	bgs, err := ioutil.ReadDir(*bgroot)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, f := range bgs {
+		background = append(background, f.Name())
+	}
+
 	worker, err := newHandler()
 	if err != nil {
 		fmt.Printf("failed to create server: %v\n", err)
@@ -122,4 +122,3 @@ func main() {
 	}
 	log.Fatal(h.ListenAndServe())
 }
-

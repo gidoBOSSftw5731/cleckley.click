@@ -20,8 +20,9 @@ img {
     <center>
     <img src="{{ .Main }}">
     </center>
+
+  <footer><mark>This site is not affiliated with Ms.Cleckley</mark></footer>
   </body>
 </html>
 `
 )
-
