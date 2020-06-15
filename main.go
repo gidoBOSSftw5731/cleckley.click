@@ -53,6 +53,11 @@ func selectRandom(s string) string {
 }
 func writeFile(w http.ResponseWriter, r *http.Request) {
 	fp := r.URL.Path
+	if fp == "#fail" {
+		log.Println("not a valid path")
+		return
+	}
+	log.Println(fp)
 	if _, err := os.Stat(fp); err != nil {
 		fmt.Fprintf(w, "<!-- invalid image: %v -->\n", r.URL.Path)
 	}
