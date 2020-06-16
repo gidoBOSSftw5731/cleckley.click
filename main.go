@@ -83,6 +83,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	log.Printf("User Requested %v", r.URL.Path)
 	switch {
 	case strings.HasPrefix(r.URL.Path, "/bk"):
 		writeFile(w, r)
