@@ -88,6 +88,8 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		writeFile(w, r)
 	case strings.HasPrefix(r.URL.Path, "/"):
 		index(w, r)
+	default:
+		http.Redirect(w, r, "https://imagen.click/d"+r.URL.Path, 307)
 	}
 }
 
